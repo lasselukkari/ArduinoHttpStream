@@ -6,7 +6,6 @@
 #include "b64.h"
 
 // Initialize constants
-const char* HttpStream::kUserAgent = "Arduino/2.2.0";
 const char* HttpStream::kContentLengthPrefix = HTTP_HEADER_CONTENT_LENGTH ": ";
 const char* HttpStream::kTransferEncodingChunked = HTTP_HEADER_TRANSFER_ENCODING ": " HTTP_HEADER_VALUE_CHUNKED;
 
@@ -106,11 +105,6 @@ int HttpStream::sendInitialHeaders(const char* aURLPath, const char* aHttpMethod
 
     iStream->print(aURLPath);
     iStream->println(" HTTP/1.1");
-    if (iSendDefaultRequestHeaders)
-    {       
-        // And user-agent string
-        sendHeader(HTTP_HEADER_USER_AGENT, kUserAgent);
-    }
 
     if (iConnectionClose)
     {

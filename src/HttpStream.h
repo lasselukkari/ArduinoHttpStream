@@ -42,8 +42,6 @@ class HttpStream : public Stream
 {
 public:
     static const int kNoContentLengthHeader =-1;
-    static const int kHttpPort =80;
-    static const char* kUserAgent;
 
 // FIXME Write longer API request, using port and user-agent, example
 // FIXME Update tempToPachube example to calculate Content-Length correctly
@@ -292,6 +290,10 @@ public:
     */
     void noDefaultRequestHeaders();
 
+    /** Reset internal state data back to the "just initialised" state
+    */
+    void resetState();
+
     // Inherited from Print
     // Note: 1st call to these indicates the user is sending the body, so if need
     // Note: be we should finish the header first
@@ -311,9 +313,6 @@ public:
     virtual uint32_t httpResponseTimeout() { return iHttpResponseTimeout; };
     virtual void setHttpResponseTimeout(uint32_t timeout) { iHttpResponseTimeout = timeout; };
 protected:
-    /** Reset internal state data back to the "just initialised" state
-    */
-    void resetState();
 
     /** Send the first part of the request and the initial headers.
       @param aURLPath	Url to request

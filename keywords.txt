@@ -39,6 +39,7 @@ headerAvailable	KEYWORD2
 readHeaderName	KEYWORD2
 readHeaderValue	KEYWORD2
 responseBody	KEYWORD2
+resetState	KEYWORD2
 
 beginMessage	KEYWORD2
 endMessage	KEYWORD2

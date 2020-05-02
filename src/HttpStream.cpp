@@ -10,9 +10,7 @@ const char* HttpStream::kContentLengthPrefix = HTTP_HEADER_CONTENT_LENGTH ": ";
 const char* HttpStream::kTransferEncodingChunked = HTTP_HEADER_TRANSFER_ENCODING ": " HTTP_HEADER_VALUE_CHUNKED;
 
 HttpStream::HttpStream(Stream& aStream)
- : iStream(&aStream),
-   iConnectionClose(true), iSendDefaultRequestHeaders(true)
-{
+ : iStream(&aStream) {
   resetState();
 }
 
@@ -28,16 +26,6 @@ void HttpStream::resetState()
   iIsChunked = false;
   iChunkLength = 0;
   iHttpResponseTimeout = kHttpResponseTimeout;
-}
-
-void HttpStream::connectionKeepAlive()
-{
-  iConnectionClose = false;
-}
-
-void HttpStream::noDefaultRequestHeaders()
-{
-  iSendDefaultRequestHeaders = false;
 }
 
 void HttpStream::beginRequest()
@@ -105,13 +93,6 @@ int HttpStream::sendInitialHeaders(const char* aURLPath, const char* aHttpMethod
 
     iStream->print(aURLPath);
     iStream->println(" HTTP/1.1");
-
-    if (iConnectionClose)
-    {
-        // Tell the server to
-        // close this connection after we're done
-        sendHeader(HTTP_HEADER_CONNECTION, "close");
-    }
 
     // Everything has gone well
     iState = eRequestStarted;

@@ -282,10 +282,6 @@ public:
     */
     String responseBody();
 
-    /** Enables connection keep-alive mode
-    */
-    void connectionKeepAlive();
-
     /** Disables sending the default request headers (Host and User Agent)
     */
     void noDefaultRequestHeaders();
@@ -371,8 +367,6 @@ protected:
     // Stores the value of the current chunk length, if present
     int iChunkLength;
     uint32_t iHttpResponseTimeout;
-    bool iConnectionClose;
-    bool iSendDefaultRequestHeaders;
     String iHeaderLine;
 };
 

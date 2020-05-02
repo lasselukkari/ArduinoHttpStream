@@ -16,7 +16,6 @@ int WebSocketStream::begin(const char* aPath)
 {
     // start the GET request
     beginRequest();
-    connectionKeepAlive();
     int status = get(aPath);
 
     if (status == 0)

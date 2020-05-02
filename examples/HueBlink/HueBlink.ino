@@ -1,6 +1,6 @@
-/* HueBlink example for ArduinoHttpClient library
+/* HueBlink example for ArduinoHttpStream library
 
-   Uses ArduinoHttpClient library to control Philips Hue
+   Uses ArduinoHttpStream library to control Philips Hue
    For more on Hue developer API see http://developer.meethue.com
 
   To control a light, the Hue expects a HTTP PUT request to:
@@ -17,43 +17,14 @@
    by Tom Igoe (tigoe) to match new API
 */
 
-#include <SPI.h>
-#include <WiFi101.h>
-#include <ArduinoHttpClient.h>
-#include "arduino_secrets.h"
+#include <ArduinoHttpStream.h>
 
-///////please enter your sensitive data in the Secret tab/arduino_secrets.h
-/////// Wifi Settings ///////
-char ssid[] = SECRET_SSID;
-char pass[] = SECRET_PASS;
-
-int status = WL_IDLE_STATUS;      // the Wifi radio's status
-
-char hueHubIP[] = "192.168.0.3";  // IP address of the HUE bridge
-String hueUserName = "huebridgeusername"; // hue bridge username
-
-// make a wifi instance and a HttpClient instance:
-WiFiClient wifi;
-HttpClient httpClient = HttpClient(wifi, hueHubIP);
-
+// make a wifi instance and a HttpStream instance:
+HttpStream HttpStream = HttpStream(Serial);
 
 void setup() {
-  //Initialize serial and wait for port to open:
   Serial.begin(9600);
-  while (!Serial); // wait for serial port to connect.
-
-  // attempt to connect to Wifi network:
-  while ( status != WL_CONNECTED) {
-    Serial.print("Attempting to connect to WPA SSID: ");
-    Serial.println(ssid);
-    // Connect to WPA/WPA2 network:
-    status = WiFi.begin(ssid, pass);
-  }
-
-  // you're connected now, so print out the data:
-  Serial.print("You're connected to the network IP = ");
-  IPAddress ip = WiFi.localIP();
-  Serial.println(ip);
+  while (!Serial);
 }
 
 void loop() {
@@ -83,11 +54,11 @@ void sendRequest(int light, String cmd, String value) {
   Serial.print("JSON command to server: ");
 
   // make the PUT request to the hub:
-  httpClient.put(request, contentType, hueCmd);
+  HttpStream.put(request, contentType, hueCmd);
   
   // read the status code and body of the response
-  int statusCode = httpClient.responseStatusCode();
-  String response = httpClient.responseBody();
+  int statusCode = HttpStream.responseStatusCode();
+  String response = HttpStream.responseBody();
 
   Serial.println(hueCmd);
   Serial.print("Status code from server: ");

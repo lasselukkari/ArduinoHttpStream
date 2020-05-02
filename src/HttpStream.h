@@ -2,18 +2,18 @@
 // (c) Copyright MCQN Ltd. 2010-2012
 // Released under Apache License, version 2.0
 
-#ifndef HttpClient_h
-#define HttpClient_h
+#ifndef HttpStream_h
+#define HttpStream_h
 
 #include <Arduino.h>
 #include <IPAddress.h>
-#include "Client.h"
+#include "Stream.h"
 
 static const int HTTP_SUCCESS =0;
 // The end of the headers has been reached.  This consumes the '\n'
 // Could not connect to the server
 static const int HTTP_ERROR_CONNECTION_FAILED =-1;
-// This call was made when the HttpClient class wasn't expecting it
+// This call was made when the HttpStream class wasn't expecting it
 // to be called.  Usually indicates your code is using the class
 // incorrectly
 static const int HTTP_ERROR_API =-2;
@@ -38,19 +38,15 @@ static const int HTTP_ERROR_INVALID_RESPONSE =-4;
 #define HTTP_HEADER_USER_AGENT     "User-Agent"
 #define HTTP_HEADER_VALUE_CHUNKED  "chunked"
 
-class HttpClient : public Client
+class HttpStream : public Stream
 {
 public:
     static const int kNoContentLengthHeader =-1;
-    static const int kHttpPort =80;
-    static const char* kUserAgent;
 
 // FIXME Write longer API request, using port and user-agent, example
 // FIXME Update tempToPachube example to calculate Content-Length correctly
 
-    HttpClient(Client& aClient, const char* aServerName, uint16_t aServerPort = kHttpPort);
-    HttpClient(Client& aClient, const String& aServerName, uint16_t aServerPort = kHttpPort);
-    HttpClient(Client& aClient, const IPAddress& aServerAddress, uint16_t aServerPort = kHttpPort);
+    HttpStream(Stream& aStream);
 
     /** Start a more complex request.
         Use this when you need to send additional headers in the request,
@@ -286,41 +282,33 @@ public:
     */
     String responseBody();
 
-    /** Enables connection keep-alive mode
-    */
-    void connectionKeepAlive();
-
     /** Disables sending the default request headers (Host and User Agent)
     */
     void noDefaultRequestHeaders();
 
+    /** Reset internal state data back to the "just initialised" state
+    */
+    void resetState();
+
     // Inherited from Print
     // Note: 1st call to these indicates the user is sending the body, so if need
     // Note: be we should finish the header first
-    virtual size_t write(uint8_t aByte) { if (iState < eRequestSent) { finishHeaders(); }; return iClient-> write(aByte); };
-    virtual size_t write(const uint8_t *aBuffer, size_t aSize) { if (iState < eRequestSent) { finishHeaders(); }; return iClient->write(aBuffer, aSize); };
+    virtual size_t write(uint8_t aByte) { if (iState < eRequestSent) { finishHeaders(); }; return iStream-> write(aByte); };
+    virtual size_t write(const uint8_t *aBuffer, size_t aSize) { if (iState < eRequestSent) { finishHeaders(); }; return iStream->write(aBuffer, aSize); };
     // Inherited from Stream
     virtual int available();
     /** Read the next byte from the server.
       @return Byte read or -1 if there are no bytes available.
     */
     virtual int read();
-    virtual int read(uint8_t *buf, size_t size);
-    virtual int peek() { return iClient->peek(); };
-    virtual void flush() { iClient->flush(); };
+    virtual int peek() { return iStream->peek(); };
+    virtual void flush() { iStream->flush(); };
 
-    // Inherited from Client
-    virtual int connect(IPAddress ip, uint16_t port) { return iClient->connect(ip, port); };
-    virtual int connect(const char *host, uint16_t port) { return iClient->connect(host, port); };
-    virtual void stop();
-    virtual uint8_t connected() { return iClient->connected(); };
-    virtual operator bool() { return bool(iClient); };
+    // Inherited from Stream
+    virtual operator bool() { return bool(iStream); };
     virtual uint32_t httpResponseTimeout() { return iHttpResponseTimeout; };
     virtual void setHttpResponseTimeout(uint32_t timeout) { iHttpResponseTimeout = timeout; };
 protected:
-    /** Reset internal state data back to the "just initialised" state
-    */
-    void resetState();
 
     /** Send the first part of the request and the initial headers.
       @param aURLPath	Url to request
@@ -336,7 +324,7 @@ protected:
 
     /** Reading any pending data from the client (used in connection keep alive mode)
     */
-    void flushClientRx();
+    void flushStreamRx();
 
     // Number of milliseconds that we wait each time there isn't any data
     // available to be read (during status code and header processing)
@@ -360,13 +348,8 @@ protected:
         eReadingChunkLength,
         eReadingBodyChunk
     } tHttpState;
-    // Client we're using
-    Client* iClient;
-    // Server we are connecting to
-    const char* iServerName;
-    IPAddress iServerAddress;
-    // Port of server we are connecting to
-    uint16_t iServerPort;
+    // Stream we're using
+    Stream* iStream;
     // Current state of the finite-state-machine
     tHttpState iState;
     // Stores the status code for the response, once known
@@ -384,8 +367,6 @@ protected:
     // Stores the value of the current chunk length, if present
     int iChunkLength;
     uint32_t iHttpResponseTimeout;
-    bool iConnectionClose;
-    bool iSendDefaultRequestHeaders;
     String iHeaderLine;
 };
 

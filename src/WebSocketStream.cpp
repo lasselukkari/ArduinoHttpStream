@@ -3,34 +3,19 @@
 
 #include "b64.h"
 
-#include "WebSocketClient.h"
+#include "WebSocketStream.h"
 
-WebSocketClient::WebSocketClient(Client& aClient, const char* aServerName, uint16_t aServerPort)
- : HttpClient(aClient, aServerName, aServerPort),
+WebSocketStream::WebSocketStream(Stream& aStream)
+ : HttpStream(aStream),
    iTxStarted(false),
    iRxSize(0)
 {
 }
 
-WebSocketClient::WebSocketClient(Client& aClient, const String& aServerName, uint16_t aServerPort) 
- : HttpClient(aClient, aServerName, aServerPort),
-   iTxStarted(false),
-   iRxSize(0)
-{
-}
-
-WebSocketClient::WebSocketClient(Client& aClient, const IPAddress& aServerAddress, uint16_t aServerPort)
- : HttpClient(aClient, aServerAddress, aServerPort),
-   iTxStarted(false),
-   iRxSize(0)
-{
-}
-
-int WebSocketClient::begin(const char* aPath)
+int WebSocketStream::begin(const char* aPath)
 {
     // start the GET request
     beginRequest();
-    connectionKeepAlive();
     int status = get(aPath);
 
     if (status == 0)
@@ -67,12 +52,12 @@ int WebSocketClient::begin(const char* aPath)
     return (status == 101) ? 0 : status;
 }
 
-int WebSocketClient::begin(const String& aPath)
+int WebSocketStream::begin(const String& aPath)
 {
     return begin(aPath.c_str());
 }
 
-int WebSocketClient::beginMessage(int aType)
+int WebSocketStream::beginMessage(int aType)
 {
     if (iTxStarted)
     {
@@ -87,7 +72,7 @@ int WebSocketClient::beginMessage(int aType)
     return 0;
 }
 
-int WebSocketClient::endMessage()
+int WebSocketStream::endMessage()
 {
     if (!iTxStarted)
     {
@@ -96,31 +81,31 @@ int WebSocketClient::endMessage()
     }
 
     // send FIN + the message type (opcode)
-    HttpClient::write(0x80 | iTxMessageType);
+    HttpStream::write(0x80 | iTxMessageType);
 
     // the message is masked (0x80)
     // send the length
     if (iTxSize < 126)
     {
-        HttpClient::write(0x80 | (uint8_t)iTxSize);
+        HttpStream::write(0x80 | (uint8_t)iTxSize);
     }
     else if (iTxSize < 0xffff)
     {
-        HttpClient::write(0x80 | 126);
-        HttpClient::write((iTxSize >> 8) & 0xff);
-        HttpClient::write((iTxSize >> 0) & 0xff);
+        HttpStream::write(0x80 | 126);
+        HttpStream::write((iTxSize >> 8) & 0xff);
+        HttpStream::write((iTxSize >> 0) & 0xff);
     }
     else
     {
-        HttpClient::write(0x80 | 127);
-        HttpClient::write((iTxSize >> 56) & 0xff);
-        HttpClient::write((iTxSize >> 48) & 0xff);
-        HttpClient::write((iTxSize >> 40) & 0xff);
-        HttpClient::write((iTxSize >> 32) & 0xff);
-        HttpClient::write((iTxSize >> 24) & 0xff);
-        HttpClient::write((iTxSize >> 16) & 0xff);
-        HttpClient::write((iTxSize >> 8) & 0xff);
-        HttpClient::write((iTxSize >> 0) & 0xff);
+        HttpStream::write(0x80 | 127);
+        HttpStream::write((iTxSize >> 56) & 0xff);
+        HttpStream::write((iTxSize >> 48) & 0xff);
+        HttpStream::write((iTxSize >> 40) & 0xff);
+        HttpStream::write((iTxSize >> 32) & 0xff);
+        HttpStream::write((iTxSize >> 24) & 0xff);
+        HttpStream::write((iTxSize >> 16) & 0xff);
+        HttpStream::write((iTxSize >> 8) & 0xff);
+        HttpStream::write((iTxSize >> 0) & 0xff);
     }
 
     uint8_t maskKey[4];
@@ -130,7 +115,7 @@ int WebSocketClient::endMessage()
     {
         maskKey[i] = random(0xff);
     }
-    HttpClient::write(maskKey, sizeof(maskKey));
+    HttpStream::write(maskKey, sizeof(maskKey));
 
     // mask the data and send
     for (int i = 0; i < (int)iTxSize; i++) {
@@ -142,20 +127,20 @@ int WebSocketClient::endMessage()
     iTxStarted = false;
     iTxSize = 0;
 
-    return (HttpClient::write(iTxBuffer, txSize) == txSize) ? 0 : 1;
+    return (HttpStream::write(iTxBuffer, txSize) == txSize) ? 0 : 1;
 }
 
-size_t WebSocketClient::write(uint8_t aByte)
+size_t WebSocketStream::write(uint8_t aByte)
 {
     return write(&aByte, sizeof(aByte));
 }
 
-size_t WebSocketClient::write(const uint8_t *aBuffer, size_t aSize)
+size_t WebSocketStream::write(const uint8_t *aBuffer, size_t aSize)
 {
     if (iState < eReadingBody)
     {
         // have not upgraded the connection yet
-        return HttpClient::write(aBuffer, aSize);
+        return HttpStream::write(aBuffer, aSize);
     }
 
     if (!iTxStarted)
@@ -178,20 +163,20 @@ size_t WebSocketClient::write(const uint8_t *aBuffer, size_t aSize)
     return aSize;
 }
 
-int WebSocketClient::parseMessage()
+int WebSocketStream::parseMessage()
 {
     flushRx();
 
     // make sure 2 bytes (opcode + length)
     // are available
-    if (HttpClient::available() < 2)
+    if (HttpStream::available() < 2)
     {
         return 0;
     }
 
     // read open code and length
-    uint8_t opcode = HttpClient::read();
-    int length = HttpClient::read();
+    uint8_t opcode = HttpStream::read();
+    int length = HttpStream::read();
 
     if ((opcode & 0x0f) == 0)
     {
@@ -213,18 +198,18 @@ int WebSocketClient::parseMessage()
     }
     else if (length == 126)
     {
-        iRxSize = (HttpClient::read() << 8) | HttpClient::read();
+        iRxSize = (HttpStream::read() << 8) | HttpStream::read();
     }
     else
     {
-        iRxSize = ((uint64_t)HttpClient::read() << 56) | 
-                    ((uint64_t)HttpClient::read() << 48) | 
-                    ((uint64_t)HttpClient::read() << 40) | 
-                    ((uint64_t)HttpClient::read() << 32) | 
-                    ((uint64_t)HttpClient::read() << 24) | 
-                    ((uint64_t)HttpClient::read() << 16) | 
-                    ((uint64_t)HttpClient::read() << 8)  |
-                    (uint64_t)HttpClient::read(); 
+        iRxSize = ((uint64_t)HttpStream::read() << 56) | 
+                    ((uint64_t)HttpStream::read() << 48) | 
+                    ((uint64_t)HttpStream::read() << 40) | 
+                    ((uint64_t)HttpStream::read() << 32) | 
+                    ((uint64_t)HttpStream::read() << 24) | 
+                    ((uint64_t)HttpStream::read() << 16) | 
+                    ((uint64_t)HttpStream::read() << 8)  |
+                    (uint64_t)HttpStream::read(); 
     }
 
     // read in the mask, if present
@@ -232,7 +217,7 @@ int WebSocketClient::parseMessage()
     {
         for (int i = 0; i < (int)sizeof(iRxMaskKey); i++)
         {
-            iRxMaskKey[i] = HttpClient::read();
+            iRxMaskKey[i] = HttpStream::read();
         }
     }
 
@@ -241,7 +226,6 @@ int WebSocketClient::parseMessage()
     if (TYPE_CONNECTION_CLOSE == messageType())
     {
         flushRx();
-        stop();
         iRxSize = 0;
     }
     else if (TYPE_PING == messageType())
@@ -264,17 +248,17 @@ int WebSocketClient::parseMessage()
     return iRxSize;
 }
 
-int WebSocketClient::messageType()
+int WebSocketStream::messageType()
 {
     return (iRxOpCode & 0x0f);
 }
 
-bool WebSocketClient::isFinal()
+bool WebSocketStream::isFinal()
 {
     return ((iRxOpCode & 0x80) != 0);
 }
 
-String WebSocketClient::readString()
+String WebSocketStream::readString()
 {
     int avail = available();
     String s;
@@ -292,7 +276,7 @@ String WebSocketClient::readString()
     return s;
 }
 
-int WebSocketClient::ping()
+int WebSocketStream::ping()
 {
     uint8_t pingData[16];
 
@@ -307,17 +291,17 @@ int WebSocketClient::ping()
     return endMessage();
 }
 
-int WebSocketClient::available()
+int WebSocketStream::available()
 {
     if (iState < eReadingBody)
     {
-        return HttpClient::available();
+        return HttpStream::available();
     }
 
     return iRxSize;
 }
 
-int WebSocketClient::read()
+int WebSocketStream::read()
 {
     byte b;
 
@@ -329,9 +313,9 @@ int WebSocketClient::read()
     return -1;
 }
 
-int WebSocketClient::read(uint8_t *aBuffer, size_t aSize)
+int WebSocketStream::read(uint8_t *aBuffer, size_t aSize)
 {
-    int readCount = HttpClient::read(aBuffer, aSize);
+    int readCount = HttpStream::readBytes(aBuffer, aSize);
 
     if (readCount > 0)
     {
@@ -350,9 +334,9 @@ int WebSocketClient::read(uint8_t *aBuffer, size_t aSize)
     return readCount;
 }
 
-int WebSocketClient::peek()
+int WebSocketStream::peek()
 {
-    int p = HttpClient::peek();
+    int p = HttpStream::peek();
 
     if (p != -1 && iRxMasked)
     {
@@ -363,7 +347,7 @@ int WebSocketClient::peek()
     return p;
 }
 
-void WebSocketClient::flushRx()
+void WebSocketStream::flushRx()
 {
     while(available())
     {

@@ -2,11 +2,11 @@
 // (c) Copyright Arduino. 2016
 // Released under Apache License, version 2.0
 
-#ifndef ArduinoHttpClient_h
-#define ArduinoHttpClient_h
+#ifndef ArduinoHttpStream_h
+#define ArduinoHttpStream_h
 
-#include "HttpClient.h"
-#include "WebSocketClient.h"
+#include "HttpStream.h"
+#include "WebSocketStream.h"
 #include "URLEncoder.h"
 
 #endif

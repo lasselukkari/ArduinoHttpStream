@@ -1,27 +1,12 @@
 // (c) Copyright 2010-2012 MCQN Ltd.
 // Released under Apache License, version 2.0
 //
-// Simple example to show how to use the HttpClient library
+// Simple example to show how to use the HttpStream library
 // Get's the web page given at http://<kHostname><kPath> and
 // outputs the content to the serial port
 
-#include <SPI.h>
-#include <WiFi101.h>
-#include <ArduinoHttpClient.h>
+#include <ArduinoHttpStream.h>
 
-// This example downloads the URL "http://arduino.cc/"
-
-#include "arduino_secrets.h"
-
-///////please enter your sensitive data in the Secret tab/arduino_secrets.h
-/////// Wifi Settings ///////
-char ssid[] = SECRET_SSID;
-char pass[] = SECRET_PASS;
-
-
-
-// Name of the server we want to connect to
-const char kHostname[] = "arduino.cc";
 // Path to download (this is the bit after the hostname in the URL
 // that you want to download
 const char kPath[] = "/";
@@ -31,28 +16,11 @@ const int kNetworkTimeout = 30*1000;
 // Number of milliseconds to wait if no data is available before trying again
 const int kNetworkDelay = 1000;
 
-WiFiClient c;
-HttpClient http(c, kHostname);
+HttpStream http = HttpStream(Serial);
 
-void setup()
-{
-  //Initialize serial and wait for port to open:
+void setup() {
   Serial.begin(9600);
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }
-
-  // attempt to connect to Wifi network:
-  Serial.print("Attempting to connect to WPA SSID: ");
-  Serial.println(ssid);
-  while (WiFi.begin(ssid, pass) != WL_CONNECTED) {
-    // unsuccessful, retry in 4 seconds
-    Serial.print("failed ... ");
-    delay(4000);
-    Serial.print("retrying ... ");
-  }
-
-  Serial.println("connected");
+  while (!Serial);
 }
 
 void loop()
@@ -92,7 +60,7 @@ void loop()
       unsigned long timeoutStart = millis();
       char c;
       // Whilst we haven't timed out & haven't reached the end of the body
-      while ( (http.connected() || http.available()) &&
+      while (http.available() &&
              (!http.endOfBodyReached()) &&
              ((millis() - timeoutStart) < kNetworkTimeout) )
       {
@@ -124,7 +92,6 @@ void loop()
     Serial.print("Connect failed: ");
     Serial.println(err);
   }
-  http.stop();
 
   // And just stop, now that we've tried a download
   while(1);

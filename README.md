@@ -1,6 +1,6 @@
-# ArduinoHttpClient
+# ArduinoHttpStream
 
-ArduinoHttpClient is a library to make it easier to interact with web servers from Arduino.
+ArduinoHttpStream is a library to make it easier to interact with web servers from Arduino.
 
 Derived from [Adrian McEwen's HttpClient library](https://github.com/amcewen/HttpClient)
 

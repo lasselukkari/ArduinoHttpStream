@@ -1,12 +1,12 @@
 // (c) Copyright Arduino. 2016
 // Released under Apache License, version 2.0
 
-#ifndef WebSocketClient_h
-#define WebSocketClient_h
+#ifndef WebSocketStream_h
+#define WebSocketStream_h
 
 #include <Arduino.h>
 
-#include "HttpClient.h"
+#include "HttpStream.h"
 
 static const int TYPE_CONTINUATION     = 0x0;
 static const int TYPE_TEXT             = 0x1;
@@ -15,13 +15,10 @@ static const int TYPE_CONNECTION_CLOSE = 0x8;
 static const int TYPE_PING             = 0x9;
 static const int TYPE_PONG             = 0xa;
 
-class WebSocketClient : public HttpClient
+class WebSocketStream : public HttpStream
 {
 public:
-    WebSocketClient(Client& aClient, const char* aServerName, uint16_t aServerPort = HttpClient::kHttpPort);
-    WebSocketClient(Client& aClient, const String& aServerName, uint16_t aServerPort = HttpClient::kHttpPort);
-    WebSocketClient(Client& aClient, const IPAddress& aServerAddress, uint16_t aServerPort = HttpClient::kHttpPort);
-
+    WebSocketStream(Stream& aStream);
     /** Start the Web Socket connection to the specified path
       @param aURLPath     Path to use in request (optional, "/" is used by default)
       @return 0 if successful, else error

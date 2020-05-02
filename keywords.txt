@@ -1,13 +1,13 @@
 #######################################
-# Syntax Coloring Map For HttpClient
+# Syntax Coloring Map For HttpStream
 #######################################
 
 #######################################
 # Datatypes (KEYWORD1)
 #######################################
 
-ArduinoHttpClient	KEYWORD1
-HttpClient	KEYWORD1
+ArduinoHttpStream	KEYWORD1
+HttpStream	KEYWORD1
 WebSocketClient	KEYWORD1
 URLEncoder	KEYWORD1
 
@@ -39,6 +39,7 @@ headerAvailable	KEYWORD2
 readHeaderName	KEYWORD2
 readHeaderValue	KEYWORD2
 responseBody	KEYWORD2
+resetState	KEYWORD2
 
 beginMessage	KEYWORD2
 endMessage	KEYWORD2

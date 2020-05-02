@@ -1,3 +1,7 @@
+## ArduinoHttpStream 0.0.1 - 2020.5.1
+
+* Started to use Stream as base clase instead of Client
+
 ## ArduinoHttpClient 0.4.0 - 2019.04.09
 
 * Added URLEncoder helper
